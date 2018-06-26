@@ -16,6 +16,7 @@ import org.mule.runtime.api.message.Message;
 import org.mule.runtime.core.api.construct.Flow;
 import org.mule.runtime.core.api.event.CoreEvent;
 import org.mule.runtime.core.api.event.EventContextFactory;
+import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.dsl.xml.ParameterDsl;
 import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.param.Config;
@@ -113,7 +114,8 @@ public class EframeworkOperations {
 	 * @param location
 	 *            is injected
 	 */
-	public void notification(String transactionType, String transactionStatus,
+	@Alias("sendNotificationEvent")
+	public void generateNotificationEvent(String transactionType, String transactionStatus,
 			@Optional(defaultValue = "NOTIFICATION: ") String transactionMsg,
 			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
 			@Content Object content, ComponentLocation location,
@@ -135,7 +137,8 @@ public class EframeworkOperations {
 	 * @param location
 	 *            is injected
 	 */
-	public void error(String transactionType, String transactionStatus,
+	@Alias("sendErrorEvent")
+	public void generateErrorEvent(String transactionType, String transactionStatus,
 			@Optional(defaultValue = "ERROR: ") String transactionMsg,
 			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
 			@Content Object content, ComponentLocation location,
@@ -157,7 +160,8 @@ public class EframeworkOperations {
 	 * @param location
 	 *            is injected
 	 */
-	public void retry(String transactionType, String transactionStatus,
+	@Alias("sendRetryEvent")
+	public void generateRetryEvent(String transactionType, String transactionStatus,
 			@Optional(defaultValue = "RETRY: ") String transactionMsg,
 			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
 			@Content Object content, ComponentLocation location,
@@ -179,7 +183,8 @@ public class EframeworkOperations {
 	 * @param location
 	 *            is injected
 	 */
-	public void audit(String transactionType, String transactionStatus,
+	@Alias("sendAuditEvent")
+	public void generateAuditEvent(String transactionType, String transactionStatus,
 			@Optional(defaultValue = "AUDIT: ") String transactionMsg,
 			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
 			@Content Object content, ComponentLocation location,
