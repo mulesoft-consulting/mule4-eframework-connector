@@ -41,6 +41,8 @@ public class EframeworkOperations {
 	public static String ERROR_FLOWNAME = "eframework.errorTransactionFlow";
 	public static String RETRY_FLOWNAME = "eframework.retryTransactionFlow";
 	public static String AUDIT_FLOWNAME = "eframework.auditLogFlow";
+	public static String RESPONSE_PAYLOAD_FLOWNAME = "eframework.responsePayloadLogFlow";
+	public static String REQUEST_PAYLOAD_FLOWNAME = "eframework.requestPayloadLogFlow";
 
 	private final Logger LOGGER = LoggerFactory.getLogger(EframeworkOperations.class);
 
@@ -179,8 +181,66 @@ public class EframeworkOperations {
 				content, location, config);
 	}
 
+	/**
+	 * Log a response payload.
+	 * 
+	 * @param transactionType
+	 * @param transactionStatus
+	 * @param transactionMsg
+	 * @param attributes
+	 * @param content
+	 *            is the inbound payload
+	 * @param location
+	 *            is injected
+	 */
+	public void logResponsePayload(String transactionType, String transactionStatus,
+			@Optional(defaultValue = "RESPONSE Payload: ") String transactionMsg,
+			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Content Object content, ComponentLocation location,
+			@Config EframeworkConfiguration config) {
+		
+		TreeMap<String, String> tempMap = createAttributes(transactionType, transactionStatus,
+				transactionMsg, attributes, location, config);
+		tempMap.put("payloadType", "RESPONSE");
+		callFlow(RESPONSE_PAYLOAD_FLOWNAME, tempMap, content, location, config);
+	}
+
+	/**
+	 * Log a response payload.
+	 * 
+	 * @param transactionType
+	 * @param transactionStatus
+	 * @param transactionMsg
+	 * @param attributes
+	 * @param content
+	 *            is the inbound payload
+	 * @param location
+	 *            is injected
+	 */
+	public void logRequestPayload(String transactionType, String transactionStatus,
+			@Optional(defaultValue = "REQUEST Payload: ") String transactionMsg,
+			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Content Object content, ComponentLocation location,
+			@Config EframeworkConfiguration config) {
+		
+		TreeMap<String, String> tempMap = createAttributes(transactionType, transactionStatus,
+				transactionMsg, attributes, location, config);
+		tempMap.put("payloadType", "REQUEST");
+		callFlow(REQUEST_PAYLOAD_FLOWNAME, tempMap, content, location, config);
+	}
+
 	private void createAttributesCallFlow(String flowName, String transactionType, String transactionStatus,
 			String transactionMsg, Map<String, String> attributes, Object content,
+			ComponentLocation location,
+			EframeworkConfiguration config) {
+
+		TreeMap<String, String> tempMap = createAttributes(transactionType, transactionStatus,
+				transactionMsg, attributes, location, config);
+		callFlow(flowName, tempMap, content, location, config);
+	}
+
+	private TreeMap<String, String> createAttributes(String transactionType, String transactionStatus,
+			String transactionMsg, Map<String, String> attributes,
 			ComponentLocation location,
 			EframeworkConfiguration config) {
 
@@ -197,6 +257,13 @@ public class EframeworkOperations {
 		tempMap.put("transactionStatus", transactionStatus);
 		String strMsg = formatMsg(transactionMsg, tempMap);
 		tempMap.put("transactionMsg", strMsg);
+		
+		return tempMap;
+	}
+
+	private void callFlow(String flowName, TreeMap<String, String> tempMap, Object content,
+			ComponentLocation location,
+			EframeworkConfiguration config) {
 
 		try {
 			Flow flow = lookupFlow(flowName);
@@ -210,7 +277,7 @@ public class EframeworkOperations {
 				LOGGER.warn(flowName + " does not exist: ");
 			}
 		} catch (MuleException ex) {
-			LOGGER.error("Error during " + transactionType, ex);
+			LOGGER.error("Error during " + tempMap.get("transactionType"), ex);
 		}
 	}
 
