@@ -1,8 +1,10 @@
 package org.mule.consulting.eframework.internal;
 
 import org.mule.runtime.extension.api.annotation.Extension;
+import org.mule.consulting.eframework.api.error.EframeworkErrors;
 import org.mule.runtime.extension.api.annotation.Configurations;
 import org.mule.runtime.extension.api.annotation.dsl.xml.Xml;
+import org.mule.runtime.extension.api.annotation.error.ErrorTypes;
 
 
 /**
@@ -11,6 +13,7 @@ import org.mule.runtime.extension.api.annotation.dsl.xml.Xml;
  */
 @Xml(prefix = "eframework")
 @Extension(name = "Eframework")
+@ErrorTypes(EframeworkErrors.class)
 @Configurations(EframeworkConfiguration.class)
 public class EframeworkExtension {
 

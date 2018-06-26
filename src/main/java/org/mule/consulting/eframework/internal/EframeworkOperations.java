@@ -2,12 +2,13 @@ package org.mule.consulting.eframework.internal;
 
 import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
 import javax.inject.Inject;
 
+import org.mule.consulting.eframework.api.error.CircuitBreakerOpenException;
+import org.mule.consulting.eframework.api.error.EframeworkErrorProvider;
 import org.mule.runtime.api.artifact.Registry;
 import org.mule.runtime.api.component.location.ComponentLocation;
 import org.mule.runtime.api.exception.MuleException;
@@ -15,7 +16,10 @@ import org.mule.runtime.api.message.Message;
 import org.mule.runtime.core.api.construct.Flow;
 import org.mule.runtime.core.api.event.CoreEvent;
 import org.mule.runtime.core.api.event.EventContextFactory;
-import org.mule.runtime.dsl.api.component.config.DefaultComponentLocation;
+import org.mule.runtime.extension.api.annotation.dsl.xml.ParameterDsl;
+import org.mule.runtime.extension.api.annotation.error.Throws;
+import org.mule.runtime.extension.api.annotation.param.Config;
+import org.mule.runtime.extension.api.annotation.param.Content;
 import org.mule.runtime.extension.api.annotation.param.MediaType;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.slf4j.Logger;
@@ -23,13 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.mule.runtime.extension.api.annotation.Configuration;
-import org.mule.runtime.extension.api.annotation.Expression;
-import org.mule.runtime.extension.api.annotation.dsl.xml.ParameterDsl;
-import org.mule.runtime.extension.api.annotation.param.Config;
-import org.mule.runtime.extension.api.annotation.param.Connection;
-import org.mule.runtime.extension.api.annotation.param.Content;
 
 /**
  * This class is a container for operations, every public method in this class
@@ -44,11 +41,20 @@ public class EframeworkOperations {
 	public static String RESPONSE_PAYLOAD_FLOWNAME = "eframework.responsePayloadLogFlow";
 	public static String REQUEST_PAYLOAD_FLOWNAME = "eframework.requestPayloadLogFlow";
 
+	public static String CIRCUIT_BREAKER_CHECK_FLOWNAME = "eframework.circuitbreaker-check-breaker";	
+	public static String CIRCUIT_BREAKER_TRIP_FLOWNAME = "eframework.circuitbreaker-trip";	
+	public static String CIRCUIT_BREAKER_RESET_FLOWNAME = "eframework.circuitbreaker-reset";	
+	public static String CIRCUIT_BREAKER_AUTO_CHECK_FLOWNAME = "eframework.circuitbreaker-auto-check-breaker";	
+	public static String CIRCUIT_BREAKER_AUTO_TRIP_FLOWNAME = "eframework.circuitbreaker-auto-trip";	
+	public static String CIRCUIT_BREAKER_AUTO_RESET_FLOWNAME = "eframework.circuitbreaker-auto-reset";	
+	
 	private final Logger LOGGER = LoggerFactory.getLogger(EframeworkOperations.class);
 
 	@Inject
 	private Registry muleRegistry;	
 	
+	
+	/*----------------Utilities------------------*/
 
 	/**
 	 * Add the specified key/value pair to the indicated transactionProperties
@@ -92,6 +98,8 @@ public class EframeworkOperations {
 		tempMap.putAll(newProperties);
 		return tempMap;
 	}
+	
+	/*----------------Events------------------*/
 
 	/**
 	 * Generate a notification event.
@@ -180,6 +188,8 @@ public class EframeworkOperations {
 		createAttributesCallFlow(AUDIT_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes,
 				content, location, config);
 	}
+	
+	/*----------------PayloadLogging------------------*/
 
 	/**
 	 * Log a response payload.
@@ -228,7 +238,179 @@ public class EframeworkOperations {
 		tempMap.put("payloadType", "REQUEST");
 		callFlow(REQUEST_PAYLOAD_FLOWNAME, tempMap, content, location, config);
 	}
+	
+	/*----------------CircuitBreakers------------------*/
 
+	/**
+	 * Check circuit breaker.
+	 * 
+	 * @param transactionType
+	 * @param transactionStatus
+	 * @param transactionMsg
+	 * @param attributes
+	 * @param content
+	 *            is the inbound payload
+	 * @param location
+	 *            is injected
+	 */
+	@Throws(EframeworkErrorProvider.class)
+	public void circuitBreakerOpenError(String transactionType, String transactionStatus,
+			@Optional(defaultValue = "Circuit Breaker Open Error: ") String transactionMsg,
+			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Content Object content, ComponentLocation location,
+			@Config EframeworkConfiguration config) {
+		
+		TreeMap<String, String> tempMap = createAttributes(transactionType, transactionStatus,
+				transactionMsg, attributes, location, config);
+		throw new CircuitBreakerOpenException(tempMap.get("transactionMsg"));
+	}
+
+	/**
+	 * Check circuit breaker.
+	 * 
+	 * @param transactionType
+	 * @param transactionStatus
+	 * @param transactionMsg
+	 * @param attributes
+	 * @param content
+	 *            is the inbound payload
+	 * @param location
+	 *            is injected
+	 */
+	public void circuitBreakerCheck(String transactionType, String transactionStatus,
+			@Optional(defaultValue = "Check Circuit Breaker: ") String transactionMsg,
+			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Content Object content, ComponentLocation location,
+			@Config EframeworkConfiguration config) {
+		
+		createAttributesCallFlow(CIRCUIT_BREAKER_CHECK_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes,
+				content, location, config);
+	}
+
+	/**
+	 * Trip circuit breaker.
+	 * 
+	 * @param transactionType
+	 * @param transactionStatus
+	 * @param transactionMsg
+	 * @param attributes
+	 * @param content
+	 *            is the inbound payload
+	 * @param location
+	 *            is injected
+	 */
+	@Throws(EframeworkErrorProvider.class)
+	public void circuitBreakerTrip(String transactionType, String transactionStatus,
+			@Optional(defaultValue = "Trip Circuit Breaker: ") String transactionMsg,
+			@Optional(defaultValue = "TRUE") boolean throwError,
+			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Content Object content, ComponentLocation location,
+			@Config EframeworkConfiguration config) {
+		
+		TreeMap<String, String> tempMap = createAttributes(transactionType, transactionStatus,
+				transactionMsg, attributes, location, config);
+		callFlow(CIRCUIT_BREAKER_TRIP_FLOWNAME, tempMap, content, location, config);
+		if (throwError) {
+			throw new CircuitBreakerOpenException(tempMap.get("transactionMsg"));
+		}
+	}
+
+	/**
+	 * Reset circuit breaker.
+	 * 
+	 * @param transactionType
+	 * @param transactionStatus
+	 * @param transactionMsg
+	 * @param attributes
+	 * @param content
+	 *            is the inbound payload
+	 * @param location
+	 *            is injected
+	 */
+	public void circuitBreakerReset(String transactionType, String transactionStatus,
+			@Optional(defaultValue = "Reset Circuit Breaker: ") String transactionMsg,
+			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Content Object content, ComponentLocation location,
+			@Config EframeworkConfiguration config) {
+		
+		createAttributesCallFlow(CIRCUIT_BREAKER_RESET_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes,
+				content, location, config);
+	}
+
+	/**
+	 * Check automatic circuit breaker.
+	 * 
+	 * @param transactionType
+	 * @param transactionStatus
+	 * @param transactionMsg
+	 * @param attributes
+	 * @param content
+	 *            is the inbound payload
+	 * @param location
+	 *            is injected
+	 */
+	public void circuitBreakerAutoCheck(String transactionType, String transactionStatus,
+			@Optional(defaultValue = "Check Auto Circuit Breaker: ") String transactionMsg,
+			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Content Object content, ComponentLocation location,
+			@Config EframeworkConfiguration config) {
+		
+		createAttributesCallFlow(CIRCUIT_BREAKER_AUTO_CHECK_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes,
+				content, location, config);
+	}
+
+	/**
+	 * Trip automatic circuit breaker.
+	 * 
+	 * @param transactionType
+	 * @param transactionStatus
+	 * @param transactionMsg
+	 * @param attributes
+	 * @param content
+	 *            is the inbound payload
+	 * @param location
+	 *            is injected
+	 */
+	@Throws(EframeworkErrorProvider.class)
+	public void circuitBreakerAutoTrip(String transactionType, String transactionStatus,
+			@Optional(defaultValue = "Trip Auto Circuit Breaker: ") String transactionMsg,
+			@Optional(defaultValue = "TRUE") boolean throwError,
+			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Content Object content, ComponentLocation location,
+			@Config EframeworkConfiguration config) {
+		
+		TreeMap<String, String> tempMap = createAttributes(transactionType, transactionStatus,
+				transactionMsg, attributes, location, config);
+		callFlow(CIRCUIT_BREAKER_AUTO_TRIP_FLOWNAME, tempMap, content, location, config);
+		if (throwError) {
+			throw new CircuitBreakerOpenException(tempMap.get("transactionMsg"));
+		}
+	}
+
+	/**
+	 * Reset automatic circuit breaker.
+	 * 
+	 * @param transactionType
+	 * @param transactionStatus
+	 * @param transactionMsg
+	 * @param attributes
+	 * @param content
+	 *            is the inbound payload
+	 * @param location
+	 *            is injected
+	 */
+	public void circuitBreakerAutoReset(String transactionType, String transactionStatus,
+			@Optional(defaultValue = "Reset Auto Circuit Breaker: ") String transactionMsg,
+			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Content Object content, ComponentLocation location,
+			@Config EframeworkConfiguration config) {
+		
+		createAttributesCallFlow(CIRCUIT_BREAKER_AUTO_RESET_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes,
+				content, location, config);
+	}
+	
+	/*----------------private------------------*/
+	
 	private void createAttributesCallFlow(String flowName, String transactionType, String transactionStatus,
 			String transactionMsg, Map<String, String> attributes, Object content,
 			ComponentLocation location,
