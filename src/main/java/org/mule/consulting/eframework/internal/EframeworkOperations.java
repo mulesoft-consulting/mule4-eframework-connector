@@ -216,6 +216,7 @@ public class EframeworkOperations {
 		
 		TreeMap<String, String> tempMap = createAttributes(transactionType, transactionStatus,
 				transactionMsg, attributes, location, config);
+		tempMap.put("transactionMsg", transactionMsg); //formatted msg is too long
 		tempMap.put("payloadType", "RESPONSE");
 		callFlow(RESPONSE_PAYLOAD_FLOWNAME, tempMap, content, location, config);
 	}
@@ -240,6 +241,7 @@ public class EframeworkOperations {
 		
 		TreeMap<String, String> tempMap = createAttributes(transactionType, transactionStatus,
 				transactionMsg, attributes, location, config);
+		tempMap.put("transactionMsg", transactionMsg); //formatted msg is too long
 		tempMap.put("payloadType", "REQUEST");
 		callFlow(REQUEST_PAYLOAD_FLOWNAME, tempMap, content, location, config);
 	}
