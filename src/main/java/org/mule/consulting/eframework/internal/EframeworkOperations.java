@@ -41,6 +41,10 @@ public class EframeworkOperations {
 	public static String AUDIT_FLOWNAME = "eframework.auditLogFlow";
 	public static String RESPONSE_PAYLOAD_FLOWNAME = "eframework.responsePayloadLogFlow";
 	public static String REQUEST_PAYLOAD_FLOWNAME = "eframework.requestPayloadLogFlow";
+	
+	public static String BUSINESS_EVENT_FLOWNAME = "eframework.businessEventFlow";
+	
+	public static String SYSTEM_EVENT_FLOWNAME = "eframework.systemEventFlow";
 
 	public static String CIRCUIT_BREAKER_CHECK_FLOWNAME = "eframework.circuitbreaker-check-breaker";	
 	public static String CIRCUIT_BREAKER_TRIP_FLOWNAME = "eframework.circuitbreaker-trip";	
@@ -101,6 +105,52 @@ public class EframeworkOperations {
 	}
 	
 	/*----------------Events------------------*/
+
+	/**
+	 * Generate a business event.
+	 * 
+	 * @param eventType
+	 * @param eventStatus
+	 * @param eventMsg
+	 * @param attributes
+	 * @param content
+	 *            is the inbound payload
+	 * @param location
+	 *            is injected
+	 */
+	@Alias("businessEvent")
+	public void generateBusinessEvent(String eventType, String eventStatus,
+			@Optional(defaultValue = "BUSINESS EVENT: ") String eventMsg,
+			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Content Object content, ComponentLocation location,
+			@Config EframeworkConfiguration config) {
+		
+		createEventAttributesCallFlow(BUSINESS_EVENT_FLOWNAME, eventType, eventStatus, eventMsg, attributes,
+				content, location, config);
+	}
+
+	/**
+	 * Generate a system event.
+	 * 
+	 * @param eventType
+	 * @param eventStatus
+	 * @param eventMsg
+	 * @param attributes
+	 * @param content
+	 *            is the inbound payload
+	 * @param location
+	 *            is injected
+	 */
+	@Alias("systemEvent")
+	public void generateSystemEvent(String eventType, String eventStatus,
+			@Optional(defaultValue = "SYSTEM EVENT: ") String eventMsg,
+			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Content Object content, ComponentLocation location,
+			@Config EframeworkConfiguration config) {
+		
+		createEventAttributesCallFlow(SYSTEM_EVENT_FLOWNAME, eventType, eventStatus, eventMsg, attributes,
+				content, location, config);
+	}
 
 	/**
 	 * Generate a notification event.
@@ -446,6 +496,38 @@ public class EframeworkOperations {
 		tempMap.put("transactionStatus", transactionStatus);
 		String strMsg = formatMsg(transactionMsg, tempMap);
 		tempMap.put("transactionMsg", strMsg);
+		
+		return tempMap;
+	}
+	
+	private void createEventAttributesCallFlow(String flowName, String eventType, String eventStatus,
+			String eventMsg, Map<String, String> attributes, Object content,
+			ComponentLocation location,
+			EframeworkConfiguration config) {
+
+		TreeMap<String, String> tempMap = createEventAttributes(eventType, eventStatus,
+				eventMsg, attributes, location, config);
+		callFlow(flowName, tempMap, content, location, config);
+	}
+
+	private TreeMap<String, String> createEventAttributes(String eventType, String eventStatus,
+			String eventMsg, Map<String, String> attributes,
+			ComponentLocation location,
+			EframeworkConfiguration config) {
+
+		TreeMap<String, String> tempMap = new TreeMap<String, String>();
+		if (attributes != null) {
+			for (String item : attributes.keySet()) {
+				tempMap.put(item, attributes.get(item));
+			}
+		}
+
+		addLocation(tempMap, location);
+		tempMap.put("applicationId", config.getApplicationId());
+		tempMap.put("eventType", eventType);
+		tempMap.put("eventStatus", eventStatus);
+		String strMsg = formatMsg(eventMsg, tempMap);
+		tempMap.put("eventMsg", strMsg);
 		
 		return tempMap;
 	}
