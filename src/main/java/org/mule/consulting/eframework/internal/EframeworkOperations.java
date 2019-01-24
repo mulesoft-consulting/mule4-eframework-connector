@@ -7,6 +7,8 @@ import java.util.TreeMap;
 
 import javax.inject.Inject;
 
+import org.mule.consulting.eframework.api.ProgressStage;
+import org.mule.consulting.eframework.api.ProgressStatus;
 import org.mule.consulting.eframework.api.error.CircuitBreakerOpenException;
 import org.mule.consulting.eframework.api.error.EframeworkErrorProvider;
 import org.mule.runtime.api.artifact.Registry;
@@ -41,6 +43,8 @@ public class EframeworkOperations {
 	public static String AUDIT_FLOWNAME = "eframework.auditLogFlow";
 	public static String RESPONSE_PAYLOAD_FLOWNAME = "eframework.responsePayloadLogFlow";
 	public static String REQUEST_PAYLOAD_FLOWNAME = "eframework.requestPayloadLogFlow";
+	
+	public static String PROGRESS_EVENT_FLOWNAME = "eframework.progressFlow";
 	
 	public static String BUSINESS_EVENT_FLOWNAME = "eframework.businessEventFlow";
 	
@@ -105,6 +109,35 @@ public class EframeworkOperations {
 	}
 	
 	/*----------------Events------------------*/
+
+	/**
+	 * Generate a progress event.
+	 * 
+	 * @param eventType
+	 * @param eventStatus
+	 * @param detailText
+	 * @param attributes
+	 * @param content
+	 *            is the inbound payload
+	 * @param location
+	 *            is injected
+	 */
+	@Alias("progress")
+	public void generateProgressEvent(@Optional(defaultValue = "MILESTONE") ProgressStage stage,
+			@Optional(defaultValue = "SUCCESS") ProgressStatus eventStatus,
+			@Optional(defaultValue = "none") String detailText,
+			@Optional(defaultValue = "none") String recordDescriptor,
+			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Content Object content, ComponentLocation location,
+			@Config EframeworkConfiguration config) {
+		
+		TreeMap<String, String> tempMap = createEventAttributes("PROGRESS", eventStatus.toString(),
+				"Progress " + detailText, attributes, location, config);
+		tempMap.put("stage", stage.toString());
+		tempMap.put("detailText", detailText);
+		tempMap.put("recordDescriptor", recordDescriptor);
+		callFlow(PROGRESS_EVENT_FLOWNAME, tempMap, content, location, config);
+	}
 
 	/**
 	 * Generate a business event.
@@ -526,8 +559,7 @@ public class EframeworkOperations {
 		tempMap.put("applicationId", config.getApplicationId());
 		tempMap.put("eventType", eventType);
 		tempMap.put("eventStatus", eventStatus);
-		String strMsg = formatMsg(eventMsg, tempMap);
-		tempMap.put("eventMsg", strMsg);
+		tempMap.put("eventMsg", eventMsg);
 		
 		return tempMap;
 	}
