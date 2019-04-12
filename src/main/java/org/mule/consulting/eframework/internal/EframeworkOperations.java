@@ -117,6 +117,7 @@ public class EframeworkOperations {
 	 * @param eventStatus
 	 * @param detailText
 	 * @param attributes
+	 * @param nonBlockingMode
 	 * @param content
 	 *            is the inbound payload
 	 * @param location
@@ -128,6 +129,7 @@ public class EframeworkOperations {
 			@Optional(defaultValue = "none") String detailText,
 			@Optional(defaultValue = "none") String recordDescriptor,
 			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Optional(defaultValue = "true") boolean nonBlockingMode,
 			@Content Object content, ComponentLocation location,
 			@Config EframeworkConfiguration config) {
 		
@@ -136,7 +138,11 @@ public class EframeworkOperations {
 		tempMap.put("stage", stage.toString());
 		tempMap.put("detailText", detailText);
 		tempMap.put("recordDescriptor", recordDescriptor);
-		callFlow(PROGRESS_EVENT_FLOWNAME, tempMap, content, location, config);
+		if (nonBlockingMode) {
+			nonblockingExecuteFlow(PROGRESS_EVENT_FLOWNAME, tempMap, content, location, config);
+		} else {
+			blockingProcessFlow(PROGRESS_EVENT_FLOWNAME, tempMap, content, location, config);
+		}
 	}
 
 	/**
@@ -146,6 +152,7 @@ public class EframeworkOperations {
 	 * @param eventStatus
 	 * @param eventMsg
 	 * @param attributes
+	 * @param nonBlockingMode
 	 * @param content
 	 *            is the inbound payload
 	 * @param location
@@ -155,10 +162,11 @@ public class EframeworkOperations {
 	public void generateBusinessEvent(String eventType, String eventStatus,
 			@Optional(defaultValue = "BUSINESS EVENT: ") String eventMsg,
 			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Optional(defaultValue = "true") boolean nonBlockingMode,
 			@Content Object content, ComponentLocation location,
 			@Config EframeworkConfiguration config) {
 		
-		createEventAttributesCallFlow(BUSINESS_EVENT_FLOWNAME, eventType, eventStatus, eventMsg, attributes,
+		createEventAttributesCallFlow(BUSINESS_EVENT_FLOWNAME, eventType, eventStatus, eventMsg, attributes, nonBlockingMode,
 				content, location, config);
 	}
 
@@ -169,6 +177,7 @@ public class EframeworkOperations {
 	 * @param eventStatus
 	 * @param eventMsg
 	 * @param attributes
+	 * @param nonBlockingMode
 	 * @param content
 	 *            is the inbound payload
 	 * @param location
@@ -178,10 +187,11 @@ public class EframeworkOperations {
 	public void generateSystemEvent(String eventType, String eventStatus,
 			@Optional(defaultValue = "SYSTEM EVENT: ") String eventMsg,
 			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Optional(defaultValue = "true") boolean nonBlockingMode,
 			@Content Object content, ComponentLocation location,
 			@Config EframeworkConfiguration config) {
 		
-		createEventAttributesCallFlow(SYSTEM_EVENT_FLOWNAME, eventType, eventStatus, eventMsg, attributes,
+		createEventAttributesCallFlow(SYSTEM_EVENT_FLOWNAME, eventType, eventStatus, eventMsg, attributes, nonBlockingMode,
 				content, location, config);
 	}
 
@@ -192,6 +202,7 @@ public class EframeworkOperations {
 	 * @param transactionStatus
 	 * @param transactionMsg
 	 * @param attributes
+	 * @param nonBlockingMode
 	 * @param content
 	 *            is the inbound payload
 	 * @param location
@@ -201,10 +212,11 @@ public class EframeworkOperations {
 	public void generateNotificationEvent(String transactionType, String transactionStatus,
 			@Optional(defaultValue = "NOTIFICATION: ") String transactionMsg,
 			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Optional(defaultValue = "true") boolean nonBlockingMode,
 			@Content Object content, ComponentLocation location,
 			@Config EframeworkConfiguration config) {
 		
-		createAttributesCallFlow(NOTIFICATION_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes,
+		createAttributesCallFlow(NOTIFICATION_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes, nonBlockingMode,
 				content, location, config);
 	}
 
@@ -215,6 +227,7 @@ public class EframeworkOperations {
 	 * @param transactionStatus
 	 * @param transactionMsg
 	 * @param attributes
+	 * @param nonBlockingMode
 	 * @param content
 	 *            is the inbound payload
 	 * @param location
@@ -224,10 +237,11 @@ public class EframeworkOperations {
 	public void generateErrorEvent(String transactionType, String transactionStatus,
 			@Optional(defaultValue = "ERROR: ") String transactionMsg,
 			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Optional(defaultValue = "true") boolean nonBlockingMode,
 			@Content Object content, ComponentLocation location,
 			@Config EframeworkConfiguration config) {
 		
-		createAttributesCallFlow(ERROR_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes,
+		createAttributesCallFlow(ERROR_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes, nonBlockingMode,
 				content, location, config);
 	}
 
@@ -238,6 +252,7 @@ public class EframeworkOperations {
 	 * @param transactionStatus
 	 * @param transactionMsg
 	 * @param attributes
+	 * @param nonBlockingMode
 	 * @param content
 	 *            is the inbound payload
 	 * @param location
@@ -247,10 +262,11 @@ public class EframeworkOperations {
 	public void generateRetryEvent(String transactionType, String transactionStatus,
 			@Optional(defaultValue = "RETRY: ") String transactionMsg,
 			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Optional(defaultValue = "true") boolean nonBlockingMode,
 			@Content Object content, ComponentLocation location,
 			@Config EframeworkConfiguration config) {
 		
-		createAttributesCallFlow(RETRY_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes,
+		createAttributesCallFlow(RETRY_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes, nonBlockingMode,
 				content, location, config);
 	}
 
@@ -261,6 +277,7 @@ public class EframeworkOperations {
 	 * @param transactionStatus
 	 * @param transactionMsg
 	 * @param attributes
+	 * @param nonBlockingMode
 	 * @param content
 	 *            is the inbound payload
 	 * @param location
@@ -270,10 +287,11 @@ public class EframeworkOperations {
 	public void generateAuditEvent(String transactionType, String transactionStatus,
 			@Optional(defaultValue = "AUDIT: ") String transactionMsg,
 			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Optional(defaultValue = "true") boolean nonBlockingMode,
 			@Content Object content, ComponentLocation location,
 			@Config EframeworkConfiguration config) {
 		
-		createAttributesCallFlow(AUDIT_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes,
+		createAttributesCallFlow(AUDIT_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes, nonBlockingMode,
 				content, location, config);
 	}
 	
@@ -286,6 +304,7 @@ public class EframeworkOperations {
 	 * @param transactionStatus
 	 * @param transactionMsg
 	 * @param attributes
+	 * @param nonBlockingMode
 	 * @param content
 	 *            is the inbound payload
 	 * @param location
@@ -294,6 +313,7 @@ public class EframeworkOperations {
 	public void logResponsePayload(String transactionType, String transactionStatus,
 			@Optional(defaultValue = "RESPONSE Payload: ") String transactionMsg,
 			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Optional(defaultValue = "true") boolean nonBlockingMode,
 			@Content Object content, ComponentLocation location,
 			@Config EframeworkConfiguration config) {
 		
@@ -301,7 +321,11 @@ public class EframeworkOperations {
 				transactionMsg, attributes, location, config);
 		tempMap.put("transactionMsg", transactionMsg); //formatted msg is too long
 		tempMap.put("payloadType", "RESPONSE");
-		callFlow(RESPONSE_PAYLOAD_FLOWNAME, tempMap, content, location, config);
+		if (nonBlockingMode) {
+			nonblockingExecuteFlow(RESPONSE_PAYLOAD_FLOWNAME, tempMap, content, location, config);
+		} else {
+			blockingProcessFlow(RESPONSE_PAYLOAD_FLOWNAME, tempMap, content, location, config);
+		}
 	}
 
 	/**
@@ -311,6 +335,7 @@ public class EframeworkOperations {
 	 * @param transactionStatus
 	 * @param transactionMsg
 	 * @param attributes
+	 * @param nonBlockingMode
 	 * @param content
 	 *            is the inbound payload
 	 * @param location
@@ -319,6 +344,7 @@ public class EframeworkOperations {
 	public void logRequestPayload(String transactionType, String transactionStatus,
 			@Optional(defaultValue = "REQUEST Payload: ") String transactionMsg,
 			@Optional(defaultValue = "#[{}]") @ParameterDsl(allowInlineDefinition = false) Map<String, String> attributes,
+			@Optional(defaultValue = "true") boolean nonBlockingMode,
 			@Content Object content, ComponentLocation location,
 			@Config EframeworkConfiguration config) {
 		
@@ -326,7 +352,11 @@ public class EframeworkOperations {
 				transactionMsg, attributes, location, config);
 		tempMap.put("transactionMsg", transactionMsg); //formatted msg is too long
 		tempMap.put("payloadType", "REQUEST");
-		callFlow(REQUEST_PAYLOAD_FLOWNAME, tempMap, content, location, config);
+		if (nonBlockingMode) {
+			nonblockingExecuteFlow(REQUEST_PAYLOAD_FLOWNAME, tempMap, content, location, config);
+		} else {
+			blockingProcessFlow(REQUEST_PAYLOAD_FLOWNAME, tempMap, content, location, config);
+		}
 	}
 	
 	/*----------------CircuitBreakers------------------*/
@@ -373,7 +403,7 @@ public class EframeworkOperations {
 			@Content Object content, ComponentLocation location,
 			@Config EframeworkConfiguration config) {
 		
-		createAttributesCallFlow(CIRCUIT_BREAKER_CHECK_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes,
+		createAttributesCallFlow(CIRCUIT_BREAKER_CHECK_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes, false,
 				content, location, config);
 	}
 
@@ -399,7 +429,7 @@ public class EframeworkOperations {
 		
 		TreeMap<String, String> tempMap = createAttributes(transactionType, transactionStatus,
 				transactionMsg, attributes, location, config);
-		callFlow(CIRCUIT_BREAKER_TRIP_FLOWNAME, tempMap, content, location, config);
+		blockingProcessFlow(CIRCUIT_BREAKER_TRIP_FLOWNAME, tempMap, content, location, config);
 		if (throwError) {
 			throw new CircuitBreakerOpenException(tempMap.get("transactionMsg"));
 		}
@@ -423,7 +453,7 @@ public class EframeworkOperations {
 			@Content Object content, ComponentLocation location,
 			@Config EframeworkConfiguration config) {
 		
-		createAttributesCallFlow(CIRCUIT_BREAKER_RESET_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes,
+		createAttributesCallFlow(CIRCUIT_BREAKER_RESET_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes, false,
 				content, location, config);
 	}
 
@@ -445,7 +475,7 @@ public class EframeworkOperations {
 			@Content Object content, ComponentLocation location,
 			@Config EframeworkConfiguration config) {
 		
-		createAttributesCallFlow(CIRCUIT_BREAKER_AUTO_CHECK_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes,
+		createAttributesCallFlow(CIRCUIT_BREAKER_AUTO_CHECK_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes, false,
 				content, location, config);
 	}
 
@@ -471,7 +501,7 @@ public class EframeworkOperations {
 		
 		TreeMap<String, String> tempMap = createAttributes(transactionType, transactionStatus,
 				transactionMsg, attributes, location, config);
-		callFlow(CIRCUIT_BREAKER_AUTO_TRIP_FLOWNAME, tempMap, content, location, config);
+		blockingProcessFlow(CIRCUIT_BREAKER_AUTO_TRIP_FLOWNAME, tempMap, content, location, config);
 		if (throwError) {
 			throw new CircuitBreakerOpenException(tempMap.get("transactionMsg"));
 		}
@@ -495,20 +525,24 @@ public class EframeworkOperations {
 			@Content Object content, ComponentLocation location,
 			@Config EframeworkConfiguration config) {
 		
-		createAttributesCallFlow(CIRCUIT_BREAKER_AUTO_RESET_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes,
+		createAttributesCallFlow(CIRCUIT_BREAKER_AUTO_RESET_FLOWNAME, transactionType, transactionStatus, transactionMsg, attributes, false,
 				content, location, config);
 	}
 	
 	/*----------------private------------------*/
 	
 	private void createAttributesCallFlow(String flowName, String transactionType, String transactionStatus,
-			String transactionMsg, Map<String, String> attributes, Object content,
+			String transactionMsg, Map<String, String> attributes, boolean nonBlockingMode, Object content,
 			ComponentLocation location,
 			EframeworkConfiguration config) {
 
 		TreeMap<String, String> tempMap = createAttributes(transactionType, transactionStatus,
 				transactionMsg, attributes, location, config);
-		callFlow(flowName, tempMap, content, location, config);
+		if (nonBlockingMode) {
+			nonblockingExecuteFlow(flowName, tempMap, content, location, config);
+		} else {
+			blockingProcessFlow(flowName, tempMap, content, location, config);
+		}
 	}
 
 	private TreeMap<String, String> createAttributes(String transactionType, String transactionStatus,
@@ -534,13 +568,17 @@ public class EframeworkOperations {
 	}
 	
 	private void createEventAttributesCallFlow(String flowName, String eventType, String eventStatus,
-			String eventMsg, Map<String, String> attributes, Object content,
+			String eventMsg, Map<String, String> attributes, boolean nonBlockingMode, Object content,
 			ComponentLocation location,
 			EframeworkConfiguration config) {
 
 		TreeMap<String, String> tempMap = createEventAttributes(eventType, eventStatus,
 				eventMsg, attributes, location, config);
-		callFlow(flowName, tempMap, content, location, config);
+		if (nonBlockingMode) {
+			nonblockingExecuteFlow(flowName, tempMap, content, location, config);
+		} else {
+			blockingProcessFlow(flowName, tempMap, content, location, config);
+		}
 	}
 
 	private TreeMap<String, String> createEventAttributes(String eventType, String eventStatus,
@@ -564,7 +602,23 @@ public class EframeworkOperations {
 		return tempMap;
 	}
 
-	private void callFlow(String flowName, TreeMap<String, String> tempMap, Object content,
+	private void nonblockingExecuteFlow(String flowName, TreeMap<String, String> tempMap, Object content,
+			ComponentLocation location,
+			EframeworkConfiguration config) {
+
+		Flow flow = lookupFlow(flowName);
+		if (flow != null) {
+			Message msg = Message.builder().value(content).attributesValue(tempMap).build();
+
+			CoreEvent event = CoreEvent.builder(EventContextFactory.create(flow, location)).message(msg).build();
+
+			flow.execute(event);
+		} else {
+			LOGGER.warn(flowName + " does not exist: ");
+		}
+	}
+
+	private void blockingProcessFlow(String flowName, TreeMap<String, String> tempMap, Object content,
 			ComponentLocation location,
 			EframeworkConfiguration config) {
 
