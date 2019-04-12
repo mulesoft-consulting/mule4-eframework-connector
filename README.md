@@ -84,5 +84,5 @@ Add this dependency to your application's pom.xml
 ```
 <groupId>org.mule.consulting</groupId>
 <artifactId>mule4-eframework</artifactId>
-<version>1.2.0</version>
+<version>1.3.0</version>
 ```
