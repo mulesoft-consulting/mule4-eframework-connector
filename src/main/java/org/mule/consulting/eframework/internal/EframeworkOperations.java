@@ -597,7 +597,8 @@ public class EframeworkOperations {
 		tempMap.put("applicationId", config.getApplicationId());
 		tempMap.put("eventType", eventType);
 		tempMap.put("eventStatus", eventStatus);
-		tempMap.put("eventMsg", eventMsg);
+		String strMsg = formatMsg(eventMsg, tempMap);
+		tempMap.put("eventMsg", strMsg);
 		
 		return tempMap;
 	}
